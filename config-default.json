@@ -1,0 +1,5 @@
+﻿{
+    "connectionString": "db_acces",
+    "apiUrl": "your api_url",
+    "secret": "your secret jwt"
+}
