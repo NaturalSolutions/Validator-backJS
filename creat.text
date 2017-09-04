@@ -1,0 +1,36 @@
+function create(userParam) {
+    var deferred = Q.defer();
+    console.log(userParam)
+    // validation
+    db.users.findOne({
+            email: userParam.email
+        },
+        function (err, user) {
+            if (err) deferred.reject(err.name + ': ' + err.message);
+
+            if (user) {
+                // email already exists
+                deferred.reject('email "' + userParam.email + '" est déjà pris');
+            } else {
+                createUser();
+            }
+        });
+
+    function createUser() {
+        // set user object to userParam without the cleartext password
+        var user = _.omit(userParam, 'password');
+
+        // add hashed password to user object
+        user.password = bcrypt.hashSync(userParam.password, 10);
+
+        db.users.insert(
+            user,
+            function (err, doc) {
+                if (err) deferred.reject(err.name + ': ' + err.message);
+
+                deferred.resolve();
+            });
+    }
+
+    return deferred.promise;
+}

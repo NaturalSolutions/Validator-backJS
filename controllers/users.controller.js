@@ -2,12 +2,12 @@
 var express = require('express');
 var router = express.Router();
 var userService = require('services/user.service');
-
+var badgesService = require('services/badges.service');
 // routes
 router.post('/authenticate', authenticate);
 router.post('/register', register);
 router.get('/', getAll);
-router.get('/current', getCurrent);
+router.get('/:id', getById);
 router.put('/:_id', update);
 router.delete('/:_id', _delete);
 
@@ -49,11 +49,20 @@ function getAll(req, res) {
         });
 }
 
-function getCurrent(req, res) {
-    userService.getById(req.user.sub)
+function getById(req, res) {
+    userService.getById(req.params.id)
         .then(function (user) {
             if (user) {
-                res.send(user);
+                user = user.toObject();
+                let filter = {$or: []};
+                filter.$or.push({postal_code: 13001});
+                filter.$or.push({nb_contrib: {$lte: user.contributions.length}});
+                badgesService.getFilterBadges(filter)
+                    .then(function (badges) {
+                        user.badges = badges;
+                        user.score=user.contributions.length*10;
+                        res.send(user);
+                    });
             } else {
                 res.sendStatus(404);
             }
